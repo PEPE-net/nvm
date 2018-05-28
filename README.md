@@ -1,4 +1,4 @@
-# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.33.8-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
+# Node Version Manager [![Build Status](https://travis-ci.org/creationix/nvm.svg?branch=master)][3] [![nvm version](https://img.shields.io/badge/version-v0.33.11-yellow.svg)][4] [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/684/badge)](https://bestpractices.coreinfrastructure.org/projects/684)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -28,6 +28,8 @@
   - [Usage](#usage-1)
 - [Compatibility Issues](#compatibility-issues)
 - [Installing nvm on Alpine Linux](#installing-nvm-on-alpine-linux)
+- [Removal](#removal)
+  - [Manual Uninstall](#manual-uninstall)
 - [Docker for development environment](#docker-for-development-environment)
 - [Problems](#problems)
 - [Mac OS "troubleshooting"](#mac-os-troubleshooting)
@@ -41,13 +43,13 @@
 To install or update nvm, you can use the [install script][2] using cURL:
 
 ```sh
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 ```
 
 or Wget:
 
 ```sh
-wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 ```
 
 <sub>The script clones the nvm repository to `~/.nvm` and adds the source line to your profile (`~/.bash_profile`, `~/.zshrc`, `~/.profile`, or `~/.bashrc`).</sub>
@@ -58,7 +60,7 @@ export NVM_DIR="$HOME/.nvm"
 ```
 
 You can customize the install source, directory, profile, and version using the `NVM_SOURCE`, `NVM_DIR`, `PROFILE`, and `NODE_VERSION` variables.
-Eg: `curl ... | NVM_DIR=/usr/local/nvm bash` for a global install. Ensure that the `NVM_DIR` does not contain a trailing slash.
+Eg: `curl ... | NVM_DIR="path/to/nvm"`. Ensure that the `NVM_DIR` does not contain a trailing slash.
 
 <sub>*NB. The installer can use `git`, `curl`, or `wget` to download `nvm`, whatever is available.*</sub>
 
@@ -68,6 +70,8 @@ Eg: `curl ... | NVM_DIR=/usr/local/nvm bash` for a global install. Ensure that t
 command -v nvm
 ```
 simply close your current terminal, open a new terminal, and try verifying again.
+
+**Note:** Since OS X 10.9, `/usr/bin/git` has been preset by Xcode command line tools, which means we can't properly detect if Git is installed or not. You need to manually install the Xcode command line tools before running the install script, otherwise, it'll fail. (see [#1782](https://github.com/creationix/nvm/issues/1782))
 
 **Note:** On OS X, if you get `nvm: command not found` after running the install script, one of the following might be the reason:-
   - your system may not have a [`.bash_profile file`] where the command is set up. Simply create one with `touch ~/.bash_profile` and run the install script again
@@ -127,7 +131,7 @@ If you have `git` installed (requires git v1.7.10+):
 
 1. clone this repo in the root of your user profile
   - `cd ~/` from anywhere then `git clone https://github.com/creationix/nvm.git .nvm`
-2. `cd ~/.nvm` and check out the latest version with `git checkout v0.33.8`
+2. `cd ~/.nvm` and check out the latest version with `git checkout v0.33.11`
 3. activate nvm by sourcing it from your shell: `. nvm.sh`
 
 Now add these lines to your `~/.bashrc`, `~/.profile`, or `~/.zshrc` file to have it automatically sourced upon login:
@@ -147,7 +151,7 @@ For a fully manual install, create a folder somewhere in your filesystem with th
 export NVM_DIR="$HOME/.nvm" && (
   git clone https://github.com/creationix/nvm.git "$NVM_DIR"
   cd "$NVM_DIR"
-  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
 ) && \. "$NVM_DIR/nvm.sh"
 ```
 
@@ -171,8 +175,8 @@ For manual upgrade with `git` (requires git v1.7.10+):
 ```sh
 (
   cd "$NVM_DIR"
-  git fetch origin
-  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" origin`
+  git fetch --tags origin
+  git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)`
 ) && \. "$NVM_DIR/nvm.sh"
 ```
 
@@ -374,7 +378,7 @@ load-nvmrc() {
 
     if [ "$nvmrc_node_version" = "N/A" ]; then
       nvm install
-    elif [ "$nvmrc_node_version" != "$node_version" ]; then
+    elif [ "$nvmrc_node_version" = "$node_version" ]; then
       nvm use
     fi
   elif [ "$node_version" != "$(nvm version default)" ]; then
@@ -493,12 +497,28 @@ If installing nvm on Alpine Linux *is* still what you want or need to do, you sh
 
 ```sh
 apk add -U curl bash ca-certificates openssl ncurses coreutils python2 make gcc g++ libgcc linux-headers grep util-linux binutils findutils
-curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
 ```
 
 The Node project has some desire but no concrete plans (due to the overheads of building, testing and support) to offer Alpine-compatible binaries.
 
 As a potential alternative, @mhart (a Node contributor) has some [Docker images for Alpine Linux with Node and optionally, npm, pre-installed](https://github.com/mhart/alpine-node).
+
+## Removal
+
+### Manual Uninstall
+
+To remove nvm manually, execute the following:
+```sh
+$ rm -rf "$NVM_DIR"
+```
+
+Edit ~/.bashrc (or other shell resource config) and remove the lines below:
+```sh
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[[ -r $NVM_DIR/bash_completion ]] && \. $NVM_DIR/bash_completion
+```
 
 ## Docker for development environment
 
@@ -560,8 +580,8 @@ sudo chmod ugo-x /usr/libexec/path_helper
 More on this issue in [dotphiles/dotzsh](https://github.com/dotphiles/dotzsh#mac-os-x).
 
 [1]: https://github.com/creationix/nvm.git
-[2]: https://github.com/creationix/nvm/blob/v0.33.8/install.sh
+[2]: https://github.com/creationix/nvm/blob/v0.33.11/install.sh
 [3]: https://travis-ci.org/creationix/nvm
-[4]: https://github.com/creationix/nvm/releases/tag/v0.33.8
+[4]: https://github.com/creationix/nvm/releases/tag/v0.33.11
 [Urchin]: https://github.com/scraperwiki/urchin
 [Fish]: http://fishshell.com

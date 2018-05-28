@@ -11,7 +11,7 @@ nvm_install_dir() {
 }
 
 nvm_latest_version() {
-  echo "v0.33.8"
+  echo "v0.33.11"
 }
 
 nvm_profile_is_bash_or_zsh() {
@@ -219,16 +219,14 @@ nvm_detect_profile() {
 
   local DETECTED_PROFILE
   DETECTED_PROFILE=''
-  local SHELLTYPE
-  SHELLTYPE="$(basename "/$SHELL")"
 
-  if [ "$SHELLTYPE" = "bash" ]; then
+  if [ -n "${BASH_VERSION-}" ]; then
     if [ -f "$HOME/.bashrc" ]; then
       DETECTED_PROFILE="$HOME/.bashrc"
     elif [ -f "$HOME/.bash_profile" ]; then
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
-  elif [ "$SHELLTYPE" = "zsh" ]; then
+  elif [ -n "${ZSH_VERSION-}" ]; then
     DETECTED_PROFILE="$HOME/.zshrc"
   fi
 
@@ -330,6 +328,7 @@ nvm_do_install() {
   PROFILE_INSTALL_DIR="$(nvm_install_dir | command sed "s:^$HOME:\$HOME:")"
 
   SOURCE_STR="\\nexport NVM_DIR=\"${PROFILE_INSTALL_DIR}\"\\n[ -s \"\$NVM_DIR/nvm.sh\" ] && \\. \"\$NVM_DIR/nvm.sh\"  # This loads nvm\\n"
+
   # shellcheck disable=SC2016
   COMPLETION_STR='[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion\n'
   BASH_OR_ZSH=false
@@ -344,6 +343,7 @@ nvm_do_install() {
     echo "   OR"
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
+    echo
   else
     if nvm_profile_is_bash_or_zsh "${NVM_PROFILE-}"; then
       BASH_OR_ZSH=true
